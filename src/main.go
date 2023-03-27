@@ -12,6 +12,9 @@ import (
 	"strconv"
 )
 
+// rankLimit は出力するランキングの上限です。
+const rankLimit = 10
+
 type Score struct {
 	Sum   int
 	Count int
@@ -58,22 +61,28 @@ func main() {
 
 }
 
-// Headerのチェック
+// checkHeader はヘッダーの内容をチェックします。
 func checkHeader(header []string) bool {
 	return header[0] == "create_timestamp" && header[1] == "player_id" && header[2] == "score"
 }
 
+// AddScore はプレイヤーのスコアを集計します。
 func (p Player) AddScore(id string, score int) {
 	if _, ok := p[id]; !ok {
+		// プレイヤーが存在しない場合は初期化
 		p[id] = &Score{}
 	}
 	p[id].Sum += score
 	p[id].Count++
 }
 
+// GetAverageScore はプレイヤーの平均スコアを返します。
+// math.Round で四捨五入しています。
 func (s Score) GetAverageScore(id string) int {
 	return int(math.Round(float64(s.Sum) / float64(s.Count)))
 }
+
+// LoadScore はCSVファイルからスコアを読み込みます。
 func LoadScore(r *csv.Reader) (Player, error) {
 	p := Player{}
 	for {
@@ -93,6 +102,7 @@ func LoadScore(r *csv.Reader) (Player, error) {
 	return p, nil
 }
 
+// AddPlayer はプレイヤーのスコアを追加します。
 func (m MeanScore) AddPlayer(score int, id string) {
 	if _, ok := m[score]; !ok {
 		m[score] = []string{}
@@ -100,6 +110,7 @@ func (m MeanScore) AddPlayer(score int, id string) {
 	m[score] = append(m[score], id)
 }
 
+// CalcMeanScore はプレイヤーの平均スコアを計算します。
 func CalcMeanScore(p Player) MeanScore {
 	m := MeanScore{}
 	for id, s := range p {
@@ -109,6 +120,7 @@ func CalcMeanScore(p Player) MeanScore {
 	return m
 }
 
+// SortMeanScore は平均スコアの降順でソートします。
 func SortMeanScore(m MeanScore) []int {
 	meanScore := make([]int, 0, len(m))
 	for s := range m {
@@ -118,19 +130,21 @@ func SortMeanScore(m MeanScore) []int {
 	return meanScore
 }
 
+// PrintRank はランキングを出力します。
 func PrintRank(m MeanScore) {
 	keys := SortMeanScore(m)
 	rank := 1
-	rankLimit := 10
 
 	fmt.Println("rank,player_id,mean_score")
 
 	for _, k := range keys {
+		// 同率の場合プレイヤーID順にソート
 		sort.Strings(m[k])
 		for _, id := range m[k] {
 			fmt.Printf("%d,%s,%d\n", rank, id, k)
 		}
 		rank += len(m[k])
+		// rankLimit に達したら終了
 		if rank > rankLimit {
 			break
 		}
