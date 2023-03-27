@@ -63,13 +63,9 @@ func checkHeader(header []string) bool {
 	return header[0] == "create_timestamp" && header[1] == "player_id" && header[2] == "score"
 }
 
-func (p Player) NewPlayer(id string) {
-	p[id] = &Score{}
-}
-
 func (p Player) AddScore(id string, score int) {
 	if _, ok := p[id]; !ok {
-		p.NewPlayer(id)
+		p[id] = &Score{}
 	}
 	p[id].Sum += score
 	p[id].Count++
@@ -97,13 +93,9 @@ func LoadScore(r *csv.Reader) (Player, error) {
 	return p, nil
 }
 
-func (m MeanScore) NewMeanScore(score int) {
-	m[score] = []string{}
-}
-
 func (m MeanScore) AddPlayer(score int, id string) {
 	if _, ok := m[score]; !ok {
-		m.NewMeanScore(score)
+		m[score] = []string{}
 	}
 	m[score] = append(m[score], id)
 }
