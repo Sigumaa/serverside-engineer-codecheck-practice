@@ -20,7 +20,7 @@ type Score struct {
 	Count int
 }
 
-type Player map[string]*Score
+type PlayerData map[string]*Score
 
 type MeanScore map[int][]string
 
@@ -67,24 +67,24 @@ func checkHeader(header []string) bool {
 }
 
 // AddScore はプレイヤーのスコアを集計します。
-func (p Player) AddScore(id string, score int) {
-	if _, ok := p[id]; !ok {
+func (d PlayerData) AddScore(id string, score int) {
+	if _, ok := d[id]; !ok {
 		// プレイヤーが存在しない場合は初期化
-		p[id] = &Score{}
+		d[id] = &Score{}
 	}
-	p[id].Sum += score
-	p[id].Count++
+	d[id].Sum += score
+	d[id].Count++
 }
 
-// GetAverageScore はプレイヤーの平均スコアを返します。
+// CalcMeanScore はプレイヤーの平均スコアを計算します。
 // math.Round で四捨五入しています。
-func (s Score) GetAverageScore(id string) int {
+func (s Score) CalcMeanScore() int {
 	return int(math.Round(float64(s.Sum) / float64(s.Count)))
 }
 
 // LoadScore はCSVファイルからスコアを読み込みます。
-func LoadScore(r *csv.Reader) (Player, error) {
-	p := Player{}
+func LoadScore(r *csv.Reader) (PlayerData, error) {
+	p := PlayerData{}
 	for {
 		record, err := r.Read()
 		if err == io.EOF {
@@ -111,10 +111,10 @@ func (m MeanScore) AddPlayer(score int, id string) {
 }
 
 // CalcMeanScore はプレイヤーの平均スコアを計算します。
-func CalcMeanScore(p Player) MeanScore {
+func CalcMeanScore(d PlayerData) MeanScore {
 	m := MeanScore{}
-	for id, s := range p {
-		score := s.GetAverageScore(id)
+	for id, s := range d {
+		score := s.CalcMeanScore()
 		m.AddPlayer(score, id)
 	}
 	return m
